@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+
+  <style>
+    #chat {
+      max-height: 500px;
+      min-height: 500px;
+      background-color: rgb(208, 231, 252);
+      
+      /* flex: 1; */
+      display: flex;
+      flex-direction: column; 
+      
+     /* overflow-y: scroll;*/
+      /* justify-content: flex-end ;*/
+      
+    }
+  </style>
+
+</head>
+<body>
+  <h1>Chat do Guia</h1>
+  <div id="chat">
+
+  </div>
+  <input class="form-control" type="text" name="msg" id="msg" placeholder="Sua mensagem">
+  <input class="form-control" type="text" name="username" id="username" placeholder="Seu nome de usuario">
+  <button class="btn btn-primary btn-lg btn-block" onclick="enviar()">Enviar</button>
+  <button class="btn btn-danger btn-lg btn-block" onclick="sair()">Sair</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+  <script>
+    var socket = io("http://localhost:8080")
+    
+    // Cadastrar evento de desconexao:
+    // socket.on("disconnect")
+
+    socket.on("showmsg", data => {
+      console.log(data)
+      var chat = document.querySelector("#chat")
+      var p = document.createElement("p")
+      p.innerHTML = `${data.username} : ${data.msg}`
+      
+      chat.append(p)
+    })
+
+    function enviar() {
+      var msgField = document.querySelector("#msg")
+      var usernameField = document.querySelector("#username")
+
+      var msg = msgField.value
+      var username = usernameField.value
+      validaUser(msg, username)
+      // socket.emit("msg", { msg, username })
+    }
+
+    function validaUser(msg, username) {
+      console.log(localStorage.getItem("objUser"))
+      let vlUser = username.replace(/\s+/g, '')
+      let lsUser = localStorage.getItem("objUser")
+
+      // console.log(lsUser.length > 0)
+      if(lsUser === null || lsUser === undefined) {
+        
+        if(!vlUser.trim()) {
+          return alert("Campo vazio ou apenas espacos!")
+        } else {
+          localStorage.setItem("objUser", vlUser)
+          // alert("Not contain spaces!")
+  
+          socket.emit("msg", { msg, username: localStorage.getItem("objUser")})
+        }
+      } else {
+        if(lsUser.length > 0) {
+          socket.emit("msg", { msg: msg, username: lsUser })
+        }
+      }
+
+
+
+      // Verifica se existe localstorage:
+      // if(!localStorage.getItem("objUser")) {
+      //   console.log("LocalStorage: "+localStorage.getItem("objUser").length)
+
+      //   //continue
+      // } 
+      // console.log("LocalStorage: "+localStorage.getItem("objUser").length)
+      // if(username !== undefined || username !== "") {
+      //   localStorage.setItem('objUser', username)
+      //   return socket.emit("msg", { msg, username: localStorage.getItem("objUser") })
+      // }
+      // return Error("Campo username invalido ou vazio!!!")
+      // console.log("LocalStorage: "+localStorage.getItem("objUser"))
+    }
+
+    function sair() {
+      localStorage.removeItem("objUser")
+      // socket.emit("disconnect", { msg: "Usuario desconectado!" })
+      alert("Usuario desconectado!")
+    }
+
+
+  </script>
+</body>
+</html>
